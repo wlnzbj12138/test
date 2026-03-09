@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>删除文章 - 我的Python博客</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            background-image: url("{% static 'blog/images/background.jpg' %}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: 80px auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        .article-title {
+            font-size: 1.2em;
+            color: #34495e;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .btn-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .delete-btn {
+            padding: 10px 30px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-right: 20px;
+        }
+        .cancel-btn {
+            padding: 10px 30px;
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>确认删除文章</h2>
+        <p>你确定要删除这篇文章吗？删除后将无法恢复！</p>
+        <div class="article-title">《{{ article.title }}》</div>
+
+        <div class="btn-group">
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">确认删除</button>
+            </form>
+            <a href="{% url 'blog:index' %}"><button type="button" class="cancel-btn">取消</button></a>
+        </div>
+    </div>
+</body>
+</html>

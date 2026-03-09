@@ -1,0 +1,281 @@
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Microsoft YaHei", sans-serif;
+  color: #333;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* 自己主页背景+遮罩（文字清晰） */
+body.my-profile::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: -1;
+}
+body.my-profile {
+  background-image: url("../images/background.jpg");
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+/* 导航栏 */
+.nav {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+.nav a {
+  color: #666;
+  text-decoration: none;
+  margin-right: 20px;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+.nav a:hover {
+  color: #007bff;
+}
+
+/* 主容器 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 关键：头像+功能按钮+统计信息 同一水平行容器 */
+.top-row {
+  display: flex;
+  align-items: center; /* 垂直居中 */
+  gap: 30px; /* 各模块间距 */
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+/* 左侧：头像模块 */
+.avatar-module {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 120px;
+  flex-shrink: 0; /* 不压缩 */
+}
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #007bff;
+  margin-bottom: 10px;
+}
+.default-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 35px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.username {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* 统计信息：横向排列（文章/关注/粉丝） */
+.stats-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+.stat-item a {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.stat-item a:hover {
+  color: #007bff;
+}
+.stat-number {
+  color: #007bff;
+  font-weight: bold;
+}
+
+/* 上传头像 */
+.upload-avatar {
+  font-size: 13px;
+  text-align: center;
+}
+.upload-avatar input {
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+.upload-avatar button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 右侧：功能按钮（头像水平右侧） */
+.tabs-module {
+  flex: 1; /* 占满剩余宽度 */
+  display: flex;
+  gap: 15px;
+}
+.tab-item {
+  padding: 10px 25px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  border-radius: 8px;
+  transition: all 0.3s;
+  background-color: #f8f9fa;
+}
+.tab-item.active {
+  background-color: #007bff;
+  color: #fff;
+}
+.tab-item:hover:not(.active) {
+  background-color: #e9ecef;
+  color: #007bff;
+}
+
+/* 文章区域（功能按钮垂直下方） */
+.articles-section {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.articles {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.article-card {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.article-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.article-title a {
+  color: #333;
+  text-decoration: none;
+}
+.article-title a:hover {
+  color: #007bff;
+}
+.article-meta {
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 10px;
+}
+.article-content {
+  font-size: 15px;
+  color: #666;
+}
+.article-delete {
+  color: #dc3545;
+  text-decoration: none;
+  font-size: 14px;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* 表单样式（修改用户名/密码） */
+.form-section {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.form-submit {
+  padding: 8px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* 关注/粉丝列表页样式 */
+.list-page {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+.user-item:last-child {
+  border-bottom: none;
+}
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.user-name a {
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+.user-name a:hover {
+  color: #007bff;
+}

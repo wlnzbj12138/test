@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>修改个人名称 - 随心贴</title>
+    <style>
+        body {
+            background-image: url("{% static 'blog/images/background.jpg' %}");
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.9);
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+            color: #333;
+            text-decoration: none;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{% url 'blog:index' %}">返回首页</a>
+        </div>
+        <h1>修改用户名</h1>
+
+        <!-- 错误提示 -->
+        {% if error_msg %}
+            <div class="error">{{ error_msg }}</div>
+        {% endif %}
+
+        <!-- 修改名称表单 -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>当前用户名：</label>
+                <input type="text" value="{{ current_username }}" disabled>
+            </div>
+            <div class="form-group">
+                <label for="new_username">新用户名：</label>
+                <input type="text" id="new_username" name="new_username" placeholder="请输入新用户名" required>
+            </div>
+            <button type="submit">保存修改</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ target_user.username }}的个人主页 - 随心贴</title>
+    <link rel="stylesheet" href="{% static 'blog/css/base.css' %}">
+</head>
+<body class="{% if user == target_user %}my-profile{% endif %}">
+    <div class="nav">
+        <a href="{% url 'blog:index' %}">返回首页</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'blog:profile' %}">我的主页</a>
+            <a href="{% url 'blog:create' %}">发表文章</a>
+            <a href="{% url 'blog:logout' %}">注销</a>
+        {% else %}
+            <a href="{% url 'blog:login' %}">登录</a>
+            <a href="{% url 'blog:register' %}">注册</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <!-- 核心：头像+功能按钮+统计信息 同一水平行 -->
+        <div class="top-row">
+            <!-- 左侧：头像模块 -->
+            <div class="avatar-module">
+                {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="avatar" alt="{{ target_user.username }}的头像">
+                {% else %}
+                    <div class="default-avatar">{{ target_user.username|first|upper }}</div>
+                {% endif %}
+
+                <div class="username">{{ target_user.username }}</div>
+
+                <!-- 统计信息：横向排列，可点击跳转 -->
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ user_articles.count }}</span>
+                        <span>文章</span>
+                    </div>
+                    <div class="stat-item">
+                        <a href="{% url 'blog:follow_list' username=target_user.username list_type='following' %}">
+                            <span class="stat-number">{{ profile.following_count }}</span>
+                            <span>关注</span>
+                        </a>
+                    </div>
+                    <div class="stat-item">
+                        <a href="{% url 'blog:follow_list' username=target_user.username list_type='followers' %}">
+                            <span class="stat-number">{{ profile.follower_count }}</span>
+                            <span>粉丝</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 上传头像（仅自己主页） -->
+                {% if user == target_user %}
+                    <div class="upload-avatar">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" name="avatar" accept="image/*">
+                            <button type="submit">上传头像</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 右侧：功能按钮（头像水平右侧） -->
+            <div class="tabs-module">
+                <div class="tab-item active" onclick="showTab('my-articles')">我的文章</div>
+                {% if user == target_user %}
+                    <div class="tab-item" onclick="showTab('edit-username')">修改用户名</div>
+                    <div class="tab-item" onclick="showTab('change-password')">修改密码</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 文章/表单区域（功能按钮垂直下方） -->
+        <div class="articles-section">
+            <div id="my-articles" class="tab-content active">
+                {% if user_articles %}
+                    <div class="articles">
+                        {% for article in user_articles %}
+                            <div class="article-card">
+                                <h3 class="article-title"><a href="{% url 'blog:detail' article_id=article.id %}">{{ article.title }}</a></h3>
+                                <div class="article-meta">发布时间：{{ article.created_at|date:"Y-m-d H:i" }}</div>
+                                <div class="article-content">{{ article.content|truncatechars:200 }}</div>
+                                {% if user == article.author %}
+                                    <a href="{% url 'blog:delete' article_id=article.id %}" class="article-delete" onclick="return confirm('确定删除？')">删除</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>暂无文章，快去<a href="{% url 'blog:create' %}">发表</a>吧！</p>
+                {% endif %}
+            </div>
+
+            {% if user == target_user %}
+                <div id="edit-username" class="tab-content" style="display: none;">
+                    <div class="form-section">
+                        <h3>修改用户名</h3>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>当前用户名：</label>
+                                <input type="text" value="{{ target_user.username }}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>新用户名：</label>
+                                <input type="text" name="new_username" required placeholder="3-15位字母/数字/下划线">
+                            </div>
+                            <button type="submit" class="form-submit">保存</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="change-password" class="tab-content" style="display: none;">
+                    <div class="form-section">
+                        <h3>修改密码</h3>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>新密码：</label>
+                                <input type="password" name="new_password1" required placeholder="6位以上，含字母+数字">
+                            </div>
+                            <div class="form-group">
+                                <label>确认新密码：</label>
+                                <input type="password" name="new_password2" required placeholder="再次输入新密码">
+                            </div>
+                            <button type="submit" class="form-submit">修改</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // 隐藏所有内容
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            // 移除所有按钮激活态
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            // 显示目标内容+激活目标按钮
+            document.getElementById(tabId).style.display = 'block';
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

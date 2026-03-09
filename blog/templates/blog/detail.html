@@ -1,0 +1,334 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ article.title }} - 随心贴</title>
+    <style>
+        body {
+            background-image: url("{% static 'blog/images/background.jpg' %}");
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.9);
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+            color: #333;
+            text-decoration: none;
+        }
+        .article-content {
+            line-height: 1.8;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+        .article-meta {
+            color: #666;
+            margin: 10px 0;
+        }
+        /* 优化多图样式：增加响应式+hover效果 */
+        .article-images {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+        .article-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            transition: all 0.2s ease;
+            cursor: zoom-in; /* 鼠标变成放大图标 */
+        }
+        .article-image:hover {
+            transform: scale(1.03);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        /* 调试提示样式 */
+        .debug-tip {
+            color: #666;
+            font-size: 12px;
+            margin: 5px 0;
+            font-style: italic;
+        }
+        .like-btn, .comment-like-btn {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .like-btn:hover, .comment-like-btn:hover {
+            color: #ff0000;
+        }
+        .comment-section {
+            margin-top: 40px;
+        }
+        .comment-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .comment-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .reply-card {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0 10px 30px;
+        }
+        .reply-form {
+            margin: 10px 0 10px 30px;
+            display: none;
+        }
+        .reply-form.active {
+            display: block;
+        }
+        .show-reply-btn {
+            border: none;
+            background: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button[type="submit"] {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background: #0056b3;
+        }
+
+        /* ========== 新增：图片放大模态框样式 ========== */
+        .image-modal {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9); /* 半透明黑色背景 */
+            z-index: 9999; /* 置顶显示 */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close:hover {
+            color: #ff4444;
+        }
+        .modal-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain; /* 保持图片比例，完整显示 */
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{% url 'blog:index' %}">返回首页</a>
+            {% if user == article.author %}
+                <a href="{% url 'blog:delete' article_id=article.id %}" onclick="return confirm('确定删除?')">删除文章</a>
+            {% endif %}
+        </div>
+
+        <h1>{{ article.title }}</h1>
+        <div class="article-meta">
+            作者: {{ article.author.username }} | 发布时间: {{ article.created_at|date:"Y-m-d H:i" }}
+            <br>
+            <a href="{% url 'blog:toggle_like' article_id=article.id %}" class="like-btn">
+                {% if user_liked_article %}
+                    👍 已点赞 ({{ article.likes.count }})
+                {% else %}
+                    👍 点赞 ({{ article.likes.count }})
+                {% endif %}
+            </a>
+        </div>
+
+        <!-- 1. 调试提示：显示图片总数和路径 -->
+        <p class="debug-tip">📊 该文章图片总数: {{ article_images|length }} | 图片列表: {{ article_images|join:", " }}</p>
+
+        <!-- 2. 显示所有文章图片（兼容空数据） -->
+        {% if article_images %}
+            <div class="article-images">
+                {% for img in article_images %}
+                    <!-- ========== 新增：绑定点击放大事件 ========== -->
+                    <img src="{{ img.image.url }}"
+                         class="article-image"
+                         alt="文章图片{{ forloop.counter }}"
+                         title="点击放大查看 | 图片路径：{{ img.image.url }}"
+                         onclick="openImageModal('{{ img.image.url }}')">
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="debug-tip">⚠️ 该文章暂无图片</p>
+        {% endif %}
+
+        <div class="article-content">{{ article.content }}</div>
+
+        <!-- 评论区 -->
+        <div class="comment-section">
+            <h3>评论区 ({{ article.comments.count }})</h3>
+
+            {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'blog:add_comment' article_id=article.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ comment_form.content.label_tag }}
+                        {{ comment_form.content }}
+                    </div>
+                    <button type="submit">发布评论</button>
+                </form>
+            {% else %}
+                <p>请<a href="{% url 'blog:login' %}">登录</a>后发表评论</p>
+            {% endif %}
+
+            {% for comment in root_comments %}
+                <div class="comment-card" id="comment-{{ comment.id }}">
+                    <div class="comment-meta">
+                        {{ comment.author.username }} | {{ comment.created_at|date:"Y-m-d H:i" }}
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'blog:toggle_comment_like' article_id=article.id comment_id=comment.id %}" class="comment-like-btn">
+                                {% if comment.id in user_comment_likes %}
+                                    👍 已点赞 ({{ comment.like_count }})
+                                {% else %}
+                                    👍 点赞 ({{ comment.like_count }})
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <span class="comment-like-btn">👍 {{ comment.like_count }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+
+                    {% if user.is_authenticated %}
+                        <button class="show-reply-btn" onclick="toggleReplyForm({{ comment.id }})">回复</button>
+                        <form class="reply-form" id="reply-form-{{ comment.id }}" method="POST" action="{% url 'blog:add_reply' article_id=article.id comment_id=comment.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {{ reply_form.content.label_tag }}
+                                {{ reply_form.content }}
+                            </div>
+                            <button type="submit">发布回复</button>
+                        </form>
+                    {% endif %}
+
+                    {% if comment.prefetched_replies %}
+                        <div class="reply-list">
+                            {% for reply in comment.prefetched_replies %}
+                                <div class="reply-card">
+                                    <div class="comment-meta">
+                                        {{ reply.author.username }} 回复 {{ comment.author.username }} | {{ reply.created_at|date:"Y-m-d H:i" }}
+                                        {% if user.is_authenticated %}
+                                            <a href="{% url 'blog:toggle_comment_like' article_id=article.id comment_id=reply.id %}" class="comment-like-btn">
+                                                {% if reply.id in user_comment_likes %}
+                                                    👍 已点赞 ({{ reply.like_count }})
+                                                {% else %}
+                                                    👍 点赞 ({{ reply.like_count }})
+                                                {% endif %}
+                                            </a>
+                                        {% else %}
+                                            <span class="comment-like-btn">👍 {{ reply.like_count }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">{{ reply.content }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>暂无评论，快来抢沙发吧！</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ========== 新增：图片放大模态框HTML ========== -->
+    <div class="image-modal" id="imageModal">
+        <span class="modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="modal-image" id="modalImage">
+    </div>
+
+    <script>
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById(`reply-form-${commentId}`);
+            form.classList.toggle('active');
+        }
+
+        // ========== 新增：图片放大/关闭函数 ==========
+        // 打开放大模态框
+        function openImageModal(imgUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex'; // 显示模态框
+            modalImg.src = imgUrl; // 设置大图地址
+        }
+
+        // 关闭放大模态框
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none'; // 隐藏模态框
+        }
+
+        // 点击模态框背景也关闭（增强体验）
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        }
+
+        // 按ESC键关闭（增强体验）
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+    </script>
+</body>
+</html>

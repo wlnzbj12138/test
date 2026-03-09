@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>随心发帖，畅所欲言</title>
+    <style>
+        body {
+            background-image: url("{% static 'blog/images/background.jpg' %}");
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .article-card {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        /* 新增：多图展示样式 */
+        .article-images {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .article-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .nav {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            margin-right: 15px;
+            color: #333;
+            text-decoration: none;
+        }
+        /* 新增：个人主页链接样式 */
+        .nav a[href*="profile"] {
+            color: #007bff;
+            font-weight: 500;
+        }
+        .nav a[href*="profile"]:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        /* 新增：头像样式 */
+        .avatar-sm {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            margin-right: 3px;
+        }
+        .avatar-md {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .default-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #eee;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            margin-right: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        .search-form {
+            margin-left: 15px;
+        }
+        .search-form input {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+        .search-form button {
+            padding: 5px 12px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background: #555;
+        }
+        /* 调试提示样式 */
+        .debug-tip {
+            color: #666;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{% url 'blog:index' %}">首页</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'blog:create' %}">发表文章</a>
+                <!-- 替换：旧的「修改用户名」→ 新的「我的主页」，新增头像显示 -->
+                <a href="{% url 'blog:profile' %}">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" class="avatar-sm" alt="我的头像">
+                    {% endif %}
+                    我的主页
+                </a>
+                <a href="{% url 'blog:logout' %}">注销</a>
+                <span>欢迎, {{ user.username }}</span>
+            {% else %}
+                <a href="{% url 'blog:login' %}">登录</a>
+                <a href="{% url 'blog:register' %}">注册</a>
+            {% endif %}
+            <form class="search-form" action="{% url 'blog:search' %}" method="GET">
+                <input type="text" name="keyword" placeholder="搜索文章标题..." required>
+                <button type="submit">搜索</button>
+            </form>
+        </div>
+        <h1>随心贴</h1>
+       {% for article in articles %}
+        <div class="article-card">
+            <h2><a href="{% url 'blog:detail' article_id=article.id %}">{{ article.title }}</a></h2>
+            <!-- 修改：作者信息 → 显示头像 + 链接到作者个人主页 -->
+            <p>
+                作者:
+                {% if article.author.profile.avatar %}
+                    <img src="{{ article.author.profile.avatar.url }}" class="avatar-md" alt="{{ article.author.username }}的头像">
+                {% else %}
+                    <div class="default-avatar">{{ article.author.username|first|upper }}</div>
+                {% endif %}
+                <a href="{% url 'blog:profile_user' username=article.author.username %}">{{ article.author.username }}</a>
+                | {{ article.created_at|date:"Y-m-d H:i" }}
+            </p>
+            <p>👍 {{ article.like_count }} | 💬 {{ article.comment_count }}</p>
+
+            <!-- 调试提示：显示文章图片数量 -->
+            <p class="debug-tip">📊 该文章图片总数: {{ article.images.all.count }}</p>
+
+            <!-- 显示文章图片（最多展示4张） -->
+            {% if article.images.all %}
+                <div class="article-images">
+                    {% for img in article.images.all|slice:":4" %}
+                        <img src="{{ img.image.url }}" class="article-image" alt="文章图片">
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <p>{{ article.content|truncatechars:150 }}</p>
+            {% if user == article.author %}
+                <a href="{% url 'blog:delete' article_id=article.id %}" onclick="return confirm('确定删除?')">删除文章</a>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p>暂无文章，快去发表第一篇吧！</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

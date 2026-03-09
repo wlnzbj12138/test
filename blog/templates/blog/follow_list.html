@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }} - 随心贴</title>
+    <style>
+        body {
+            background-image: url("{% static 'blog/images/background.jpg' %}");
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.9);
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+            color: #333;
+            text-decoration: none;
+        }
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .default-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #666;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .follow-btn {
+            padding: 5px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .follow-btn.unfollow {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="{% url 'blog:index' %}">返回首页</a>
+            <a href="{% url 'blog:profile_user' username=target_user.username %}">返回{{ target_user.username }}的主页</a>
+        </div>
+
+        <h1>{{ title }}</h1>
+
+        {% if users %}
+            {% for item in users %}
+                {% with user_obj=item.user|default:item %}
+                    {% with real_username=user_obj.username|default:"未知用户" %}
+                        <div class="user-card">
+                            {% if user_obj.profile and user_obj.profile.avatar %}
+                                <img src="{{ user_obj.profile.avatar.url }}" class="avatar" alt="{{ real_username }}的头像">
+                            {% else %}
+                                <div class="default-avatar">{{ real_username|first|upper }}</div>
+                            {% endif %}
+
+                            <div class="user-info">
+                                <h3><a href="{% url 'blog:profile_user' username=real_username %}">{{ real_username }}</a></h3>
+                                <p>
+                                    文章数：{{ user_obj.article_set.count|default:0 }} |
+                                    关注：{{ user_obj.profile.following_count|default:0 }} |
+                                    粉丝：{{ user_obj.profile.follower_count|default:0 }}
+                                </p>
+                            </div>
+
+                            {% if user.is_authenticated and user != user_obj %}
+                                <form method="POST" action="{% url 'blog:follow_user' user_id=user_obj.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="follow-btn {% if user_obj in user.profile.following.all %}unfollow{% endif %}">
+                                        {% if user_obj in user.profile.following.all %}取消关注{% else %}关注{% endif %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endwith %}
+            {% empty %}
+                <p>暂无数据</p>
+            {% endfor %}
+        {% else %}
+            <p>暂无{% if list_type == 'following' %}关注的人{% else %}粉丝{% endif %}！</p>
+        {% endif %}
+    </div>
+</body>
+</html>

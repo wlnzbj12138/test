@@ -1,0 +1,24 @@
+{% load static %}
+
+<!-- login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录</title>
+    <style>
+        body { background-image: url("{% static 'blog/images/background.jpg' %}"); background-size: cover; }
+        .container { max-width: 400px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>登录</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">登录</button>
+        </form>
+        <p>还没账号？<a href="{% url 'blog:register' %}">去注册</a></p>
+    </div>
+</body>
+</html>
